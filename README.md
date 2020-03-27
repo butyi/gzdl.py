@@ -1,6 +1,6 @@
 # gzdl.py
 
-Linux CLI Downloader for Motorola/Freescale/NXP MC68HC908GZ60
+Command Line Downloader for Motorola/Freescale/NXP MC68HC908GZ60
 
 ## Terminology
 
@@ -20,14 +20,14 @@ This software needs to be downloaded into microcontroller only once by a monitor
 ### Downloader
 
 Downloader is PC side software. The communication pair of Bootloader. 
-It can send the pre-compiled software (or any other data) to data to microcontroller through the supported hardware interface. 
+It can send the pre-compiled software (or any other data) to microcontroller through the supported hardware interface. 
 
 ## What is this?
 
 This is the Downloader for GZ series microcontroller.
 
-I have written the same in C [See here](https://github.com/butyi/gzdl.c/), but it only works on Linux. 
-But this Python one also works on Windows.
+I have written the same in C [See here](https://github.com/butyi/gzdl.c/), which works only on Linux. 
+But this Python one works on any platform (Windows, Linux, OS X).
 
 ## Hardware
 
@@ -55,13 +55,15 @@ Print out help about version, command line options, tipical usages.
 
 Open a serial terminal with defined baud rate.
 
-`./gzdl.py -b 57600 -f ~/prg.s19 -c -m`
+`./gzdl.py -b 57600 -f ~/prg.s19 -m`
 
 Download file prg.s19 from home folder with defined baud rate and memory mirror file `gzdl.mem` will be created.
 
-`./gzdl.py -b 57600 -f ~/prg.s19 -c -m -t`
+`./gzdl.py -b 57600 -f ~/prg.s19 -m -t`
 
-Same as before and after remains in terminal mode.
+Same as before but after successfull download it remains in terminal mode.
+
+Note: on Windows you do not need the first `./` characters.
 
 ## Further Development
 
@@ -69,7 +71,7 @@ If you only improve PC (client) side features, just
 - Edit gzdl.py 
 - Enjoy it.
 
-Most of improvements need to be implemented on both PC (client) side and uC (server) side software.
+Some improvements need to be implemented on both PC (client) side and uC (server) side software. Feel free to do it.
 
 ## Baud rate
 
@@ -80,13 +82,13 @@ Refer bootloader code [here](https://github.com/butyi/gzbl/).
 
 - Motherboard mounted ttyS0
 - USB Serial interface ttyUSB0 
-  ( [FT231XS](https://www.ftdichip.com/Support/Documents/DataSheets/Cables/DS_Chipi-X.pdf) and
+  ( E.g. [FT231XS](https://www.ftdichip.com/Support/Documents/DataSheets/Cables/DS_Chipi-X.pdf) and
     [ATEN UC232A1](https://www.aten.com/global/en/products/usb-&-thunderbolt/usb-converters/uc232a1/) ) 
 
 ## License
 
 This is free. You can do anything you want with it.
-While I am using Linux, I got so many support from free projects, I am happy if I can help for the community.
+While I am using Linux, I've got so many support from free projects, now I am happy if I can help for the community.
 
 ### Keywords
 
