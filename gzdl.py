@@ -6,7 +6,7 @@
 
 # Set built in COM port useable on Ubuntu:
 #   List available ports by 'dmesg | grep tty'. My one is '[    1.427419] 00:01: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A'
-#   Add my user to dialout group by 'sudo gpasswd --add ${USER} dialout' 
+#   Add my user to dialout group by 'sudo gpasswd --add ${USER} dialout'
 
 # Import statements
 import os, sys, getopt, struct
@@ -16,8 +16,10 @@ import bincopy # 'pip install bincopy'
 import re
 import time
 import ntpath
-import curses # https://docs.python.org/3/library/curses.html#module-curses
-import binascii
+if sys.platform.startswith("win"): # Windows
+  import msvcrt
+else:
+  import curses # https://docs.python.org/3/library/curses.html#module-curses
 
 # Authorship information
 __author__ = "Janos BENCSIK"
@@ -51,7 +53,7 @@ terminal = False
 # ---------------------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------------------
-def p(s):  
+def p(s):
   f1.write(s)
   sys.stdout.write(s)
   sys.stdout.flush()
@@ -66,6 +68,13 @@ def err(s):
 # ---------------------------------------------------------------------------------------
 def h(byte,f = "02X"):
   return("$"+format(byte,f))
+
+# ---------------------------------------------------------------------------------------
+def ba2hs(ba): # bytearray to hex string
+  ret = ""
+  for byte in ba:
+    ret += format(byte,"02X")+" "
+  return(ret)
 
 # ---------------------------------------------------------------------------------------
 def DownloadRow(data, address):
@@ -98,7 +107,7 @@ def DownloadRow(data, address):
 
 
   # Transmission
-  f1.write("\nDat Tx: "+binascii.hexlify(buff)+"\n")
+  f1.write("\nDat Tx: "+ba2hs(buff)+"\n")
   num = ser.write(buff)
   if num < len(buff):
     err("Too less "+h(num)+" written bytes for page "+h(address,"04X"))
@@ -106,14 +115,14 @@ def DownloadRow(data, address):
   # Receive answer
   answer = bytearray()
   answer.extend(ser.read(5))
-  f1.write("Dat Rx: "+binascii.hexlify(answer)+"\n")
+  f1.write("Dat Rx: "+ba2hs(answer)+"\n")
 
   # Check answer if it is proper
   if len(answer) == 0:
     err("There was no answer for page "+h(address,"04X"))
-  
+
   #if(com_dump)printf_hex(fcd, "Rx: ", answer, answer_len);
-    
+
   if len(answer) < 5:
     err("Too short answer for page "+h(address,"04X"))
 
@@ -141,20 +150,19 @@ def DownloadRow(data, address):
 
 # ---------------------------------------------------------------------------------------
 def ConnectDevice():
-  conn = b"\x1C\x1C\x1C\x1C"
-  goodresp = b"\xE3\xE3\xE3\xE3"
+  conn = bytearray([0x1C,0x1C,0x1C,0x1C])
+  goodresp = bytearray([0xE3,0xE3,0xE3,0xE3])
   try:
     while True:
-      f1.write("\nConn Tx: "+binascii.hexlify(conn)+"\n")
+      f1.write("\nCon Tx: "+ba2hs(conn))
       ser.write(conn)
 
-      answer = bytearray()
-      answer.extend(ser.read(4))
+      answer = bytearray(ser.read(4))
       if 0<len(answer): # If there was any answer
-        f1.write("\nConn Rx: "+binascii.hexlify(answer)+"\n")
+        f1.write("\nCon Rx: "+ba2hs(answer))
       if answer == goodresp:
         break
-      #p(h(ord(resp[0]))) 
+      #p(h(ord(resp[0])))
   except KeyboardInterrupt:
     p("\nUser abort.\n")
     ser.close()
@@ -162,9 +170,9 @@ def ConnectDevice():
     sys.exit(0)
   else:
     return
-  
+
 # ---------------------------------------------------------------------------------------
-def PrintHelp(): 
+def PrintHelp():
   p("gzdl.py - MC68HC908GZ60 DownLoader - " + version +"\n")
   p("Download software into flash memory from an S19 file through RS232\n")
   p("Log file gzdl.com is always created/updated (See with 'cat gzdl.com')\n");
@@ -271,14 +279,14 @@ if 0 < len(inputfile):
         r["start"] = a # Save start address
         r["used"] = True # Mark as row is used
       if r["used"] == True: # If row used
-        r["data"].append(mem[a]) # Add further data bytes 
+        r["data"].append(mem[a]) # Add further data bytes
     if r["used"] == False: # If there is no data in row,
       continue # There is no more task
     # Delete 0xFF bytes from end of row
     for a in range(r["row"] + r["rowlen"]-1, r["row"]-1, -1): # Go backward on row addresses
       if mem[a] == 0xFF: # If data byte is empty
         r["data"].pop() # Drop it from data list
-      else: # At first not empty data byte 
+      else: # At first not empty data byte
         break # leave the loop
 
   # Delete not used rows from list
@@ -311,30 +319,46 @@ if 0 < len(inputfile):
 if terminal:
   f1.write("\nTerminal started\n")
   ser.timeout = 0 # clear timeout to speed up terminal response
-  stdscr = curses.initscr()
-  curses.noecho() # switch off echo
-  stdscr.nodelay(1) # set getch() non-blocking
-  stdscr.scrollok(True)
-  stdscr.idlok(True)
+  if not sys.platform.startswith("win"): # Windows
+    stdscr = curses.initscr()
+    curses.noecho() # switch off echo
+    stdscr.nodelay(1) # set getch() non-blocking
+    stdscr.scrollok(True)
+    stdscr.idlok(True)
   while True:
 
-    # From keyboard to UART
-    c = stdscr.getch()
-    if c == 0x1B: # ESC button
-      break
-    if c != -1:
-      ser.write(chr(c))
-      f1.write(chr(c))
+    if sys.platform.startswith("win"): # Windows
+      # From keyboard to UART
+      if msvcrt.kbhit():
+        c = msvcrt.getch()
+        if ord(c) == 0x1B: # ESC button
+          break
+        if ord(c) != -1:
+          ser.write(c)
+          f1.write(str(chr(c[0])))
+      # From UART to display
+      bs = ser.read(1)
+      if len(bs) != 0:
+        p(str(chr(bs[0])))
+    else:
+      # From keyboard to UART
+      c = stdscr.getch()
+      if c == 0x1B: # ESC button
+        break
+      if c != -1:
+        ser.write(chr(c))
+        f1.write(chr(c))
 
-    # From UART to display
-    bs = ser.read(1)
-    if len(bs) != 0:
-      stdscr.addch(bs)
-      f1.write(bs)
+      # From UART to display
+      bs = ser.read(1)
+      if len(bs) != 0:
+        stdscr.addch(bs)
+        f1.write(bs)
 
   # Restore original window mode
-  curses.echo()
-  curses.reset_shell_mode()
+  if not sys.platform.startswith("win"): # Windows
+    curses.echo()
+    curses.reset_shell_mode()
   p("\n")
 
 # ---------------------------------------------------------------------------------------
