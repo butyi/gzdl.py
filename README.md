@@ -85,6 +85,11 @@ Refer bootloader code [here](https://github.com/butyi/gzbl/).
   ( E.g. [FT231XS](https://www.ftdichip.com/Support/Documents/DataSheets/Cables/DS_Chipi-X.pdf) and
     [ATEN UC232A1](https://www.aten.com/global/en/products/usb-&-thunderbolt/usb-converters/uc232a1/) ) 
 
+## Supported Operation Systems
+
+I have tested download and terminal on both Linux (Ubuntu 18.04.4 LTS) and Windows 10.
+I could not test on OS X because I don't have.
+
 ## License
 
 This is free. You can do anything you want with it.
