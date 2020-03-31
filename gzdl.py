@@ -266,7 +266,7 @@ if 0 < len(inputfile):
   # Save memory content
   if mem_dump:
     p("Create or update file gzdl.mem")
-    f2 = open("./gzdl.mem", "bw+")
+    f2 = open("./gzdl.mem", "wb")
     f2.write(bytearray(mem))
     f2.close()
     p(", Done.\n")
