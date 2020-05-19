@@ -47,6 +47,7 @@ mem_dump = False
 mem = bytearray(65536)
 connected = False
 terminal = False
+see_val = False
 
 # ---------------------------------------------------------------------------------------
 # Functions
@@ -182,6 +183,7 @@ def PrintHelp():
   p("  -f s19file   S19 file path to be downloaded\n")
   p("  -t           Terminal after download.\n");
   p("  -m           Memory dump into text file gzdl.mem (See with 'xxd gzdl.mem')\n")
+  p("  -s           See values of bytes (show 41 instead of A)\n")
   p("  -h           Print out this HELP text\n")
   p("Examples:\n")
   p("  gzml.py -f xy.s19  Download xy.s19 software into uC\n")
@@ -198,7 +200,7 @@ f1 = open("./gzdl.com", "w+")
 #Parsing command line options
 argv = sys.argv[1:]
 try:
-  opts, args = getopt.getopt(argv,"p:b:f:mth:",["port=","baud=","file=","memory","terminal","help"])
+  opts, args = getopt.getopt(argv,"p:b:f:mtsh",["port=","baud=","file=","memory","terminal","seeval","help"])
 except getopt.GetoptError:
   p("Wrong option.\n")
   PrintHelp()
@@ -213,6 +215,8 @@ for opt, arg in opts:
     inputfile = arg
   elif opt in ("-m", "--memory"):
     mem_dump = True
+  elif opt in ("-s", "--seeval"):
+    see_val = True
   elif opt in ("-t", "--terminal"):
     terminal = True
 
@@ -319,7 +323,7 @@ if 0 < len(inputfile):
 if terminal:
   f1.write("\nTerminal started\n")
   ser.timeout = 0 # clear timeout to speed up terminal response
-  if not sys.platform.startswith("win"): # Windows
+  if not sys.platform.startswith("win"): # Linux
     stdscr = curses.initscr()
     curses.noecho() # switch off echo
     stdscr.nodelay(1) # set getch() non-blocking
@@ -340,7 +344,7 @@ if terminal:
       bs = ser.read(1)
       if len(bs) != 0:
         p(str(chr(bs[0])))
-    else:
+    else: # Linux
       # From keyboard to UART
       c = stdscr.getch()
       if c == 0x1B: # ESC button
@@ -352,7 +356,13 @@ if terminal:
       # From UART to display
       bs = ser.read(1)
       if len(bs) != 0:
-        stdscr.addch(bs)
+        if see_val and ord(bs) != 0x0A:
+          s = format(ord(bs),"02X")
+          stdscr.addch(s[0])
+          stdscr.addch(s[1])
+          stdscr.addch(0x20)
+        else:
+          stdscr.addch(bs)
         f1.write(bs)
 
   # Restore original window mode
