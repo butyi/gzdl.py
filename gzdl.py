@@ -12,7 +12,6 @@
 import os, sys, getopt, struct
 import array
 import serial # I use Python 2.7.17. For this I needed 'sudo apt install python-pip' and 'sudo python -m pip install pyserial'
-import bincopy # 'pip install bincopy'
 import re
 import time
 import ntpath
@@ -35,7 +34,7 @@ __status__ = "Prototype"
 # ---------------------------------------------------------------------------------------
 # Global variables
 # ---------------------------------------------------------------------------------------
-version = "V0.00 2020.03.25.";
+version = "V0.01 2021.04.07.";
 
 inputfile = ""
 if sys.platform.startswith("linux") or sys.platform.startswith("cygwin") or sys.platform.startswith("darwin"): # linux or OS X
@@ -255,16 +254,37 @@ if 0 < len(inputfile):
 
   # Read S19 into data array. Not used bytes are 0xFF.
   p("Read S19 file "+ntpath.basename(inputfile))
-  f = bincopy.BinFile(inputfile)
-  p(", Done.\n")
-
-  p("Collect data")
+  f = open(inputfile, "r")
   mem = [0xFF] * 65536
-  for segment in f.segments:
-    i = 0
-    for x in range(segment.address,segment.address+len(segment.data)):
-      mem[x] = segment.data[i]
-      i += 1
+
+  for line in f.readlines():
+    line = line.strip() # Trim new line characters
+
+    pointer = 0
+
+    record_type = line[pointer:pointer+2]
+    pointer += 2
+    
+    record_length = int(line[pointer:pointer+2],16)-1
+    pointer += 2
+
+    if record_type == "S1":
+      record_address = int(line[pointer:pointer+4],16)
+      record_length -= 2
+      pointer += 4
+    else:
+      continue
+
+    for x in range(record_length):
+      record_byte = line[pointer:pointer+2]
+      pointer += 2
+      mem[record_address] = int(record_byte,16)
+      record_address += 1
+
+    record_cs = line[-2:] # I do not check the checksum, sorry
+      
+
+  f.close()
   p(", Done.\n")
 
   # Save memory content
