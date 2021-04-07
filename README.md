@@ -66,7 +66,7 @@ More details about hardware is [here.](https://github.com/butyi/gzml.py/)
 The software was developed on my Ubuntu Linux 18.04 LTS.
 - Open a terminal
 - First check out files into a folder `git init` , `git clone https://github.com/butyi/gzdl.py.git`.
-- You maybe need to add your user to group of RS232 device in case of permission denied. In my case `sudo gpasswd --add ${USER} dialout`.
+- You maybe need to add your user to group of RS232 device in case of permission denied. In my case `sudo gpasswd --add ${USER} dialout`. After this command, you need to log out and in to effect the change.
 - You maybe need to install some Python modules. See my comments around imports in file `gzdl.py`.
 - Give executable flag `chmod +x gzdl.py`
 
