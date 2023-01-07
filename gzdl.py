@@ -370,7 +370,7 @@ if terminal:
       if c == 0x1B: # ESC button
         break
       if c != -1:
-        ser.write(chr(c))
+        ser.write(str.encode(chr(c)))
         f1.write(chr(c))
 
       # From UART to display
