@@ -227,8 +227,6 @@ p("Baud rate is " + str(baud) + "\n")
 
 # Open serial port
 p("Open serial port")
-if not os.path.isfile(port):
-  err("Serial port " + port + " not available")
 try:
   ser = serial.Serial(port, baud, timeout=1)
 except:
