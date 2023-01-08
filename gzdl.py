@@ -61,7 +61,8 @@ def p(s):
 # ---------------------------------------------------------------------------------------
 def err(s):
   p("\nERROR! "+s+"\n\n")
-  ser.close()
+  if 'ser' in globals():
+    ser.close()
   f1.close() # Close communication log file
   sys.exit(1)
 
@@ -226,6 +227,8 @@ p("Baud rate is " + str(baud) + "\n")
 
 # Open serial port
 p("Open serial port")
+if not os.path.isfile(port):
+  err("Serial port " + port + " not available")
 try:
   ser = serial.Serial(port, baud, timeout=1)
 except:
@@ -264,7 +267,7 @@ if 0 < len(inputfile):
 
     record_type = line[pointer:pointer+2]
     pointer += 2
-    
+
     record_length = int(line[pointer:pointer+2],16)-1
     pointer += 2
 
@@ -282,7 +285,7 @@ if 0 < len(inputfile):
       record_address += 1
 
     record_cs = line[-2:] # I do not check the checksum, sorry
-      
+
 
   f.close()
   p(", Done.\n")
