@@ -371,11 +371,18 @@ if terminal:
       if c == 0x1B: # ESC button
         break
       if c != -1:
-        ser.write(str.encode(chr(c)))
+        ser.write(chr(c).encode())
         f1.write(chr(c))
 
       # From UART to display
-      bs = ser.read(1)
+      try:
+        bs = ser.read(1)
+      except:
+        # Restore original window mode
+        if not sys.platform.startswith("win"): # Windows
+          curses.echo()
+          curses.reset_shell_mode()
+        err("\rPort " + port + " broken")
       if len(bs) != 0:
         if see_val and ord(bs) != 0x0A:
           s = format(ord(bs),"02X")
@@ -384,7 +391,7 @@ if terminal:
           stdscr.addch(0x20)
         else:
           stdscr.addch(bs)
-        f1.write(bs)
+        f1.write(str(bs))
 
   # Restore original window mode
   if not sys.platform.startswith("win"): # Windows
